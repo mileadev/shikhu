@@ -35,19 +35,27 @@ def init(
     init_db()
     console.print("  [green]>[/green] Database initialized")
 
-    if not os.environ.get(KEY_NAME) and interactive():
-        _ask_for_key()
+    from shikhu.providers import provider_name, validate_config
 
-    if not os.environ.get(KEY_NAME):
-        console.print(
-            "  [yellow]![/yellow] OPENROUTER_API_KEY not set — question generation won't work"
-        )
-        if os.environ.get("INCEPTION_API_KEY"):
+    if provider_name() == "openrouter":
+        if not os.environ.get(KEY_NAME) and interactive():
+            _ask_for_key()
+        if not os.environ.get(KEY_NAME):
             console.print(
-                "    [dim]INCEPTION_API_KEY is no longer used — get an OpenRouter key at https://openrouter.ai/keys[/dim]"
+                "  [yellow]![/yellow] OPENROUTER_API_KEY not set — question generation won't work"
             )
+            if os.environ.get("INCEPTION_API_KEY"):
+                console.print(
+                    "    [dim]INCEPTION_API_KEY is no longer used — get an OpenRouter key at https://openrouter.ai/keys[/dim]"
+                )
+        else:
+            console.print("  [green]>[/green] API key found")
     else:
-        console.print("  [green]>[/green] API key found")
+        try:
+            validate_config()
+            console.print(f"  [green]>[/green] Provider: {provider_name()}")
+        except (RuntimeError, ValueError) as exc:
+            console.print(f"  [yellow]![/yellow] Provider configuration: {exc}")
 
     quizignore = Path(".quizignore")
     if not quizignore.exists():
@@ -116,13 +124,14 @@ def _ensure_gitignored():
     gitignore = Path(".gitignore")
     content = gitignore.read_text() if gitignore.exists() else ""
 
-    if "coverage.db" not in content:
-        prefix = "" if not content or content.endswith("\n") else "\n"
+    patterns = {line.strip() for line in content.splitlines()}
+    missing = [entry for entry in ("coverage.db*", ".env", ".env.local") if entry not in patterns]
+    if missing:
         with gitignore.open("a") as f:
-            f.write(f"{prefix}\n# shikhu local database (contains captured prompts)\ncoverage.db\n")
-        console.print("  [green]>[/green] Added coverage.db to .gitignore")
-
-    if Path(".env").exists() and ".env" not in content:
-        console.print(
-            "  [yellow]![/yellow] .env exists but isn't in .gitignore — add it so your API key stays out of git"
-        )
+            f.write(
+                ("" if not content or content.endswith("\n") else "\n")
+                + "\n# Shikhu local state and credentials\n"
+                + "\n".join(missing)
+                + "\n"
+            )
+        console.print(f"  [green]>[/green] Added {', '.join(missing)} to .gitignore")

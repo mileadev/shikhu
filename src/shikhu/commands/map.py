@@ -24,7 +24,8 @@ from shikhu.commands.utils import (
     golden_target,
 )
 from shikhu.env import load_env
-from shikhu.inquiry import MAP_ALGO_VERSION, past_question_bar, score_past_prompt
+from shikhu.inquiry import MAP_ALGO_VERSION, map_algo_version, past_question_bar, score_past_prompt
+from shikhu.providers import provider_name
 from shikhu.staleness import mark_stale_questions
 from shikhu.store import (
     add_past_prompts,
@@ -103,12 +104,12 @@ def _score_all(
                 result["conceptual"],
                 result["answerable"],
                 result["files"],
-                MAP_ALGO_VERSION,
+                map_algo_version(),
             )
             scored += 1
             status.update(
-                f"Scoring past prompts… {scored}/{len(prompts)}  "
-                f"[dim]${systemone.spent_usd():.4f}[/dim]"
+                f"Scoring past prompts… {scored}/{len(prompts)}"
+                + (f"  [dim]${systemone.spent_usd():.4f}[/dim]" if provider_name() == "openrouter" else "")
             )
     return scored, failed, capped
 
@@ -236,7 +237,7 @@ def map_(
     transcripts_dir = Path(transcripts) if transcripts else project_transcripts_dir()
     prompts, n_transcripts = scan(transcripts_dir)
     added = add_past_prompts(prompts)
-    counts = count_past_prompts(MAP_ALGO_VERSION)
+    counts = count_past_prompts(map_algo_version())
     if not counts["total"]:
         console.print(
             "Nothing to map yet: shikhu map reads the Claude Code sessions you ran in this "
@@ -261,20 +262,27 @@ def map_(
             "`shikhu summarize` adds them.[/dim]"
         )
 
-    unscored = get_unscored_past_prompts(MAP_ALGO_VERSION)
+    unscored = get_unscored_past_prompts(map_algo_version())
     if unscored:
-        est = _estimate_usd(unscored, summaries)
-        console.print(
-            f"{len(unscored)} prompt(s) to score. Each is sent with your {len(summaries)} file "
-            f"summaries to Jev through OpenRouter: about [bold]${est:.2f}[/bold] on your key."
-        )
+        if provider_name() == "openrouter":
+            est = _estimate_usd(unscored, summaries)
+            console.print(
+                f"{len(unscored)} prompt(s) to score. Each is sent with your {len(summaries)} file "
+                f"summaries to Jev through OpenRouter: about [bold]${est:.2f}[/bold] on your key."
+            )
+        else:
+            console.print(
+                f"{len(unscored)} prompt(s) to score using {provider_name()}. "
+                "Judgment scores are uncalibrated; provider charges may apply."
+            )
         if dry_run:
             console.print("[dim]Dry run: nothing was sent. Run `shikhu map` to score them.[/dim]")
         elif yes or typer.confirm("Score them now?", default=False):
             ensure_api_key()
             scored, failed, capped = _score_all(unscored, summaries, workers)
             console.print(
-                f"[green]>[/green] Scored {scored} prompt(s) for ${systemone.spent_usd():.4f}."
+                f"[green]>[/green] Scored {scored} prompt(s)"
+                + (f" for ${systemone.spent_usd():.4f}." if provider_name() == "openrouter" else ".")
             )
             if failed:
                 console.print(
@@ -285,7 +293,7 @@ def map_(
                     "[yellow]Stopped at the Jev spending cap (SHIKHU_JEV_BUDGET_USD). "
                     "Run `shikhu map` again to continue.[/yellow]"
                 )
-            counts = count_past_prompts(MAP_ALGO_VERSION)
+            counts = count_past_prompts(map_algo_version())
 
     if not counts["scored"]:
         return

@@ -113,6 +113,12 @@ def ask(state, questions: dict, model: str | None = None) -> tuple[dict, dict]:
 
     `state` may be a string, dict, or list of strings."""
     global _spent_usd
+    from shikhu.providers import provider_name
+
+    if provider_name() != "openrouter":
+        from shikhu.judgments import ask as heuristic_ask
+
+        return heuristic_ask(state, questions)
     model = model or os.environ.get("SHIKHU_JEV_MODEL") or DEFAULT_JEV_MODEL
 
     budget = _budget()

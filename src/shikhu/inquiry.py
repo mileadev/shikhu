@@ -31,7 +31,32 @@ STRONG = 0.60  # above this, lead with it
 # survive the same treatment.
 BATCH_FILES = 100
 
+
+def _effective_batch_size(default: int) -> int:
+    from shikhu.providers import provider_name
+
+    if provider_name() == "openrouter":
+        return default
+    raw = os.environ.get("SHIKHU_HEURISTIC_BATCH_FILES", "20")
+    try:
+        limit = int(raw)
+    except ValueError as exc:
+        raise ValueError("SHIKHU_HEURISTIC_BATCH_FILES must be an integer") from exc
+    if not 1 <= limit <= 100:
+        raise ValueError("SHIKHU_HEURISTIC_BATCH_FILES must be between 1 and 100")
+    return limit
+
 ALGO_VERSION = f"jev-salience/{systemone.DEFAULT_JEV_MODEL}"
+
+
+def algo_version() -> str:
+    from shikhu.providers import provider_name
+
+    provider = provider_name()
+    if provider == "openrouter":
+        return ALGO_VERSION
+    model = os.environ.get("SHIKHU_JUDGMENT_MODEL") or os.environ.get("SHIKHU_MODEL") or "unknown"
+    return f"llm-heuristic-v1/{provider}/{model}"
 
 _GATE = systemone.noul(
     "Can the question in `state.question` be answered from the files described in `state.files`?",
@@ -88,6 +113,7 @@ def _threshold(name: str, default: float) -> float:
 
 
 def _batches(summaries: dict[str, str], size: int) -> list[dict[str, str]]:
+    size = _effective_batch_size(size)
     items = list(summaries.items())
     return [dict(items[i : i + size]) for i in range(0, len(items), size)] or [{}]
 
@@ -200,6 +226,10 @@ MAP_CONCEPTUAL = 0.5
 MAP_ALGO_VERSION = f"map-v2/{ALGO_VERSION}"
 
 
+def map_algo_version() -> str:
+    return MAP_ALGO_VERSION if algo_version() == ALGO_VERSION else f"map-v2/{algo_version()}"
+
+
 def past_question_bar() -> dict:
     """What a scored past prompt must clear to count as a question about this codebase, and
     which files it lands on. Env-overridable, like the live thresholds."""
@@ -207,7 +237,7 @@ def past_question_bar() -> dict:
         "min_conceptual": _threshold("SHIKHU_MAP_CONCEPTUAL", MAP_CONCEPTUAL),
         "min_answerable": _threshold("SHIKHU_GATE_THRESHOLD", GATE_THRESHOLD),
         "min_file": _threshold("SHIKHU_MAP_FILE", STRONG),
-        "algo_version": MAP_ALGO_VERSION,
+        "algo_version": map_algo_version(),
     }
 
 

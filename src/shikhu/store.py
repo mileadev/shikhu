@@ -278,7 +278,8 @@ def read_file_lines(
 ) -> str | None:
     """Read the actual code from disk, optionally slicing to a line range.
     Returns None if file doesn't exist."""
-    if not os.path.isfile(file_path):
+    # Tracked symlinks may point outside the repository; never read them into prompts.
+    if os.path.islink(file_path) or not os.path.isfile(file_path):
         return None
     with open(file_path, encoding="utf-8", errors="replace") as f:
         lines = f.readlines()

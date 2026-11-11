@@ -14,7 +14,7 @@ import typer
 from shikhu.commands.utils import DEFAULT_EXTENSIONS, console, get_trackable_files
 from shikhu.env import load_env
 from shikhu.inquiry import (
-    ALGO_VERSION,
+    algo_version,
     GATE_THRESHOLD,
     STRONG,
     _threshold,
@@ -131,13 +131,13 @@ def record_inquiry(
             # The skill, an explicit /shikhu-inquiry, and a future hook all land here;
             # nothing distinguishes them, so record the loop, not a path we cannot know.
             signals={"source": "inquiry-loop"},
-            algo_version=ALGO_VERSION,
+            algo_version=algo_version(),
         ),
     )
     set_attribution_user_label(label_id, "confirmed" if confirmed else "rejected")
     end_review(
         review_id,
-        agent_summary=f"Conceptual inquiry via the inquiry loop. Files ranked by {ALGO_VERSION}.",
+        agent_summary=f"Conceptual inquiry via the inquiry loop. Files ranked by {algo_version()}.",
     )
 
     # A rejected inquiry is deliberately NOT a quiz seed: the question was real but the file

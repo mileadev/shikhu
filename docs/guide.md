@@ -1,3 +1,5 @@
+> **Provider override:** This guide documents the original OpenRouter/Jev defaults. For Ollama Local, Ollama Cloud, Bedrock, and uncalibrated judgment limitations, see the [README](../README.md).
+
 # Shikhu guide
 
 The full reference: every setup step in detail, all commands, how coverage works, privacy and configuration. For the short version, see the [README](../README.md).

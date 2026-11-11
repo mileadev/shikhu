@@ -1,5 +1,6 @@
 .env
-coverage.db
+.env.local
+coverage.db*
 .quizignore
 __pycache__/
 .venv/

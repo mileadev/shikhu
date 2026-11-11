@@ -49,7 +49,14 @@ def _check_response(response: requests.Response) -> dict:
 
 
 def _chat(prompt: str, max_tokens: int, response_format: dict | None = None) -> tuple[str, dict]:
-    """POST one user prompt to OpenRouter. Returns (message content, stats)."""
+    """POST one user prompt to the selected provider. Returns content and usage."""
+    from shikhu.providers import ModelTruncatedError, chat, provider_name
+
+    if provider_name() != "openrouter":
+        try:
+            return chat(prompt, max_tokens, response_format=response_format)
+        except ModelTruncatedError as exc:
+            raise TruncatedResponse(str(exc)) from exc
     model = get_model()
     payload: dict = {
         "model": model,

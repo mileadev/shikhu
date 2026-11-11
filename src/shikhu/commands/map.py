@@ -24,7 +24,12 @@ from shikhu.commands.utils import (
     golden_target,
 )
 from shikhu.env import load_env
-from shikhu.inquiry import map_algo_version, past_question_bar, score_past_prompt
+from shikhu.inquiry import (
+    MAP_ALGO_VERSION as MAP_ALGO_VERSION,
+    map_algo_version,
+    past_question_bar,
+    score_past_prompt,
+)
 from shikhu.providers import provider_name
 from shikhu.staleness import mark_stale_questions
 from shikhu.store import (

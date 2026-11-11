@@ -39,10 +39,16 @@ SUMMARY_EXTENSIONS = DEFAULT_EXTENSIONS + ",.md"
 
 
 def ensure_api_key() -> None:
-    """Exit with a friendly message if OPENROUTER_API_KEY is missing.
+    """Check credentials for the selected provider before making inference calls."""
+    from shikhu.providers import provider_name, validate_config
 
-    Call at the top of commands that hit the OpenRouter API, so a misconfigured
-    key fails once with instructions instead of once per file."""
+    if provider_name() != "openrouter":
+        try:
+            validate_config()
+        except (RuntimeError, ValueError) as exc:
+            console.print(f"[red]{exc}[/red]")
+            raise typer.Exit(code=1) from exc
+        return
     if os.environ.get("OPENROUTER_API_KEY"):
         return
     console.print("[red]OPENROUTER_API_KEY is not set.[/red]")
@@ -172,6 +178,7 @@ def get_trackable_files(
         f
         for f in result.stdout.strip().split("\n")
         if f
+        and not Path(f).is_symlink()
         and any(f.endswith(ext) for ext in ext_set)
         and not _quizignored(f, patterns)
         and _has_content(f)

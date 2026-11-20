@@ -12,10 +12,12 @@ def test_local_generation_without_openrouter_credentials(monkeypatch):
     monkeypatch.setenv("SHIKHU_PROVIDER", "ollama_local")
     monkeypatch.setenv("SHIKHU_MODEL", "qwen3:14b")
     monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
-    call = MagicMock(return_value=(
-        '{"questions":[{"question":"Why?","choices":["A","B","C","D"],"correct_index":0}]}',
-        {"model": "qwen3:14b", "elapsed": 0.1, "cost": None},
-    ))
+    call = MagicMock(
+        return_value=(
+            '{"questions":[{"question":"Why?","choices":["A","B","C","D"],"correct_index":0}]}',
+            {"model": "qwen3:14b", "elapsed": 0.1, "cost": None},
+        )
+    )
     monkeypatch.setattr(providers, "chat", call)
     ensure_api_key()
     quiz, stats = generator.generate_quiz("Prompt")
@@ -27,10 +29,14 @@ def test_local_generation_without_openrouter_credentials(monkeypatch):
 def test_local_judgments_have_distinct_provenance(monkeypatch):
     monkeypatch.setenv("SHIKHU_PROVIDER", "ollama_local")
     monkeypatch.setenv("SHIKHU_MODEL", "qwen3:14b")
-    monkeypatch.setattr(providers, "chat", lambda *a, **k: (
-        '{"scores":{"gate":0.75}}',
-        {"model": "qwen3:14b", "elapsed": 0.1, "cost": None},
-    ))
+    monkeypatch.setattr(
+        providers,
+        "chat",
+        lambda *a, **k: (
+            '{"scores":{"gate":0.75}}',
+            {"model": "qwen3:14b", "elapsed": 0.1, "cost": None},
+        ),
+    )
     answers, stats = systemone.ask(
         state={"question": "how does this work?"},
         questions={"gate": systemone.noul("Is this about the code?")},

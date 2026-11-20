@@ -12,7 +12,14 @@ from shikhu import judgments, providers
 
 @pytest.fixture(autouse=True)
 def _reset_provider(monkeypatch):
-    for name in ("SHIKHU_PROVIDER", "SHIKHU_MODEL", "SHIKHU_JUDGMENT_MODEL", "SHIKHU_OLLAMA_URL", "OLLAMA_API_KEY", "AWS_PROFILE"):
+    for name in (
+        "SHIKHU_PROVIDER",
+        "SHIKHU_MODEL",
+        "SHIKHU_JUDGMENT_MODEL",
+        "SHIKHU_OLLAMA_URL",
+        "OLLAMA_API_KEY",
+        "AWS_PROFILE",
+    ):
         monkeypatch.delenv(name, raising=False)
 
 
@@ -77,12 +84,15 @@ def test_cloud_schema_prompt_fallback(monkeypatch):
     assert "valid JSON" in body["messages"][0]["content"]
 
 
-@pytest.mark.parametrize("base", [
-    "file:///etc/passwd",
-    "http://foo?api_key=x",
-    "http://me:pwd@host",
-    "http://host/other",
-])
+@pytest.mark.parametrize(
+    "base",
+    [
+        "file:///etc/passwd",
+        "http://foo?api_key=x",
+        "http://me:pwd@host",
+        "http://host/other",
+    ],
+)
 def test_invalid_local_endpoint(monkeypatch, base):
     monkeypatch.setenv("SHIKHU_PROVIDER", "ollama_local")
     monkeypatch.setenv("SHIKHU_MODEL", "qwen")
@@ -131,21 +141,32 @@ def test_bedrock_uses_native_converse(monkeypatch):
 def test_heuristic_scores_are_not_calibrated(monkeypatch):
     monkeypatch.setenv("SHIKHU_PROVIDER", "ollama_local")
     monkeypatch.setenv("SHIKHU_MODEL", "qwen")
-    monkeypatch.setattr(providers, "chat", lambda *a, **k: ('{"scores":{"q":0.8}}', {"elapsed": 0.1, "model": "qwen"}))
+    monkeypatch.setattr(
+        providers,
+        "chat",
+        lambda *a, **k: ('{"scores":{"q":0.8}}', {"elapsed": 0.1, "model": "qwen"}),
+    )
     answer, stats = judgments.ask("state", {"q": {"type": "noul"}})
     assert answer["q"]["noul"] == pytest.approx(0.8)
     assert stats["judgment_kind"] == "uncalibrated_heuristic"
 
 
-@pytest.mark.parametrize("text", [
-    '{"scores":{"q":1.5}}', '{"scores":{}}',
-    '{"scores":{"q":true}}', '{"scores":{"q":"0.5"}}',
-    '{"scores":{"q":0.8,"q":0.7}}',
-])
+@pytest.mark.parametrize(
+    "text",
+    [
+        '{"scores":{"q":1.5}}',
+        '{"scores":{}}',
+        '{"scores":{"q":true}}',
+        '{"scores":{"q":"0.5"}}',
+        '{"scores":{"q":0.8,"q":0.7}}',
+    ],
+)
 def test_invalid_heuristic_scores(monkeypatch, text):
     monkeypatch.setenv("SHIKHU_PROVIDER", "ollama_local")
     monkeypatch.setenv("SHIKHU_MODEL", "qwen")
-    monkeypatch.setattr(providers, "chat", lambda *a, **k: (text, {"elapsed": 0.1, "model": "qwen"}))
+    monkeypatch.setattr(
+        providers, "chat", lambda *a, **k: (text, {"elapsed": 0.1, "model": "qwen"})
+    )
     with pytest.raises(judgments.JudgmentProtocolError):
         judgments.ask("state", {"q": {"type": "noul"}})
 

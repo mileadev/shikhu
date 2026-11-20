@@ -128,8 +128,17 @@ def _ollama_chat(prompt: str, max_tokens: int, schema: dict | None, model: str) 
 def _bedrock_schema(value):
     """Remove unsupported Bedrock Converse JSON-Schema constraints; validate responses locally."""
     unsupported = {
-        "minimum", "maximum", "multipleOf", "exclusiveMinimum", "exclusiveMaximum",
-        "minLength", "maxLength", "maxItems", "minProperties", "maxProperties", "uniqueItems",
+        "minimum",
+        "maximum",
+        "multipleOf",
+        "exclusiveMinimum",
+        "exclusiveMaximum",
+        "minLength",
+        "maxLength",
+        "maxItems",
+        "minProperties",
+        "maxProperties",
+        "uniqueItems",
     }
     if isinstance(value, list):
         return [_bedrock_schema(v) for v in value]

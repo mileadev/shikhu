@@ -1,0 +1,29 @@
+name: Check upstream Shikhu upgrades
+
+on:
+  schedule:
+    - cron: "21 5 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: shikhu-upstream-sync
+  cancel-in-progress: false
+
+jobs:
+  open-review-pr:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out fork
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Fetch upstream and open review PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash scripts/sync_upstream.sh

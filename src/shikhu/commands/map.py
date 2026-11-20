@@ -24,12 +24,8 @@ from shikhu.commands.utils import (
     golden_target,
 )
 from shikhu.env import load_env
-from shikhu.inquiry import (
-    MAP_ALGO_VERSION as MAP_ALGO_VERSION,
-    map_algo_version,
-    past_question_bar,
-    score_past_prompt,
-)
+from shikhu.inquiry import MAP_ALGO_VERSION as MAP_ALGO_VERSION
+from shikhu.inquiry import map_algo_version, past_question_bar, score_past_prompt
 from shikhu.providers import provider_name
 from shikhu.staleness import mark_stale_questions
 from shikhu.store import (
@@ -114,7 +110,11 @@ def _score_all(
             scored += 1
             status.update(
                 f"Scoring past prompts… {scored}/{len(prompts)}"
-                + (f"  [dim]${systemone.spent_usd():.4f}[/dim]" if provider_name() == "openrouter" else "")
+                + (
+                    f"  [dim]${systemone.spent_usd():.4f}[/dim]"
+                    if provider_name() == "openrouter"
+                    else ""
+                )
             )
     return scored, failed, capped
 
@@ -287,7 +287,11 @@ def map_(
             scored, failed, capped = _score_all(unscored, summaries, workers)
             console.print(
                 f"[green]>[/green] Scored {scored} prompt(s)"
-                + (f" for ${systemone.spent_usd():.4f}." if provider_name() == "openrouter" else ".")
+                + (
+                    f" for ${systemone.spent_usd():.4f}."
+                    if provider_name() == "openrouter"
+                    else "."
+                )
             )
             if failed:
                 console.print(

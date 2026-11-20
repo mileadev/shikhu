@@ -110,7 +110,11 @@ def _score_all(
             scored += 1
             status.update(
                 f"Scoring past prompts… {scored}/{len(prompts)}"
-                + (f"  [dim]${systemone.spent_usd():.4f}[/dim]" if provider_name() == "openrouter" else "")
+                + (
+                    f"  [dim]${systemone.spent_usd():.4f}[/dim]"
+                    if provider_name() == "openrouter"
+                    else ""
+                )
             )
     return scored, failed, capped
 
@@ -283,7 +287,11 @@ def map_(
             scored, failed, capped = _score_all(unscored, summaries, workers)
             console.print(
                 f"[green]>[/green] Scored {scored} prompt(s)"
-                + (f" for ${systemone.spent_usd():.4f}." if provider_name() == "openrouter" else ".")
+                + (
+                    f" for ${systemone.spent_usd():.4f}."
+                    if provider_name() == "openrouter"
+                    else "."
+                )
             )
             if failed:
                 console.print(

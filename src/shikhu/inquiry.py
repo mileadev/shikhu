@@ -46,6 +46,7 @@ def _effective_batch_size(default: int) -> int:
         raise ValueError("SHIKHU_HEURISTIC_BATCH_FILES must be between 1 and 100")
     return limit
 
+
 ALGO_VERSION = f"jev-salience/{systemone.DEFAULT_JEV_MODEL}"
 
 
@@ -57,6 +58,7 @@ def algo_version() -> str:
         return ALGO_VERSION
     model = os.environ.get("SHIKHU_JUDGMENT_MODEL") or os.environ.get("SHIKHU_MODEL") or "unknown"
     return f"llm-heuristic-v1/{provider}/{model}"
+
 
 _GATE = systemone.noul(
     "Can the question in `state.question` be answered from the files described in `state.files`?",

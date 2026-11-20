@@ -26,9 +26,7 @@ def test_provider_dispatch_survives_upstream_changes(monkeypatch, provider):
     )
     content, stats = generator._chat("Check source", 500, response_format={"type": "json_schema"})
     assert (content, stats) == result
-    backend.assert_called_once_with(
-        "Check source", 500, response_format={"type": "json_schema"}
-    )
+    backend.assert_called_once_with("Check source", 500, response_format={"type": "json_schema"})
 
 
 def test_provider_truncation_keeps_generator_retry_contract(monkeypatch):

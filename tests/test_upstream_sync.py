@@ -31,13 +31,9 @@ def repositories(tmp_path):
     git(upstream, "add", ".")
     git(upstream, "commit", "-m", "baseline")
 
-    subprocess.run(
-        ["git", "init", "--bare", str(fork)], capture_output=True, check=True
-    )
+    subprocess.run(["git", "init", "--bare", str(fork)], capture_output=True, check=True)
     git(fork, "symbolic-ref", "HEAD", "refs/heads/main")
-    subprocess.run(
-        ["git", "clone", str(upstream), str(work)], capture_output=True, check=True
-    )
+    subprocess.run(["git", "clone", str(upstream), str(work)], capture_output=True, check=True)
     git(work, "remote", "set-url", "origin", str(fork))
     git(work, "push", "-u", "origin", "main")
     git(work, "config", "user.name", "fork-test")

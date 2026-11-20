@@ -8,7 +8,7 @@ if [[ -n "$(git status --porcelain --untracked-files=no)" ]]; then
   exit 2
 fi
 
-UPSTREAM_URL="https://github.com/arjunpatel7/shikhu.git"
+UPSTREAM_URL="${SHIKHU_UPSTREAM_URL:-https://github.com/arjunpatel7/shikhu.git}"
 git fetch --no-tags origin refs/heads/main:refs/remotes/origin/main
 git fetch --no-tags "$UPSTREAM_URL" refs/heads/main:refs/remotes/shikhu-upstream/main
 

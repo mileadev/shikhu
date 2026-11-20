@@ -14,10 +14,10 @@ import typer
 from shikhu.commands.utils import DEFAULT_EXTENSIONS, console, get_trackable_files
 from shikhu.env import load_env
 from shikhu.inquiry import (
-    algo_version,
     GATE_THRESHOLD,
     STRONG,
     _threshold,
+    algo_version,
     answerable,
     rank_files,
 )

@@ -1,48 +1,66 @@
-# Shikhu local-provider integration overlay
+# Deployment and upstream upgrades
 
-This archive is a pinned source overlay for `arjunpatel7/shikhu` at upstream Git tree `c102da96d7689923619f933efdec86f41a01e6ab`. It is **not** a pre-cloned Git repository. `apply_patch.py` refuses to modify a checkout if the tracked source files differ from the audited Git blobs.
+This is [mileadev/shikhu](https://github.com/mileadev/shikhu), a fork of
+[arjunpatel7/shikhu](https://github.com/arjunpatel7/shikhu).
+The fork preserves upstream Git ancestry and the optional inference providers.
 
-## Apply and verify
+## Install the fork
+
+Requires Python 3.12+, Git and uv.
 
 ```bash
-git clone https://github.com/arjunpatel7/shikhu.git
-cd shikhu
-git switch -c feat/ollama-bedrock-local
-python3 /path/to/shikhu-overlay/apply_patch.py .
+uv tool install --force --python 3.12 "git+https://github.com/mileadev/shikhu.git@main"
+```
+
+Install Bedrock support by adding `--with boto3` before the Git URL.
+Run in any target Git repository:
+
+```bash
+export SHIKHU_PROVIDER=ollama_local SHIKHU_MODEL=qwen3:14b
+shikhu init --no-skill
+shikhu refresh
+shikhu quiz
+```
+
+Or select `ollama_cloud` with `OLLAMA_API_KEY`, or `bedrock` with a scoped
+AWS role/profile and an approved model. Review `.quizignore` before sharing
+source code with any remote inference provider.
+
+## Tracking upstream safely
+
+- Source: `arjunpatel7/shikhu:main`.
+- Trigger: GitHub Actions [upstream-sync.yml](../.github/workflows/upstream-sync.yml),
+  weekly or manually via **Actions**.
+- Behavior: fetch upstream, merge on a new `sync/upstream-<sha>` branch,
+  create a **review PR**; never force-push or auto-merge `main`.
+- Conflicts: workflow stops without a remote push. Resolve in a local branch,
+  run CI, and open a human-reviewed PR.
+- Review: `generator._chat` dispatch, `systemone.ask` return contract,
+  Pydantic response schemas, config loading, source data boundaries,
+  dependency/lockfile changes and model defaults.
+- Repository settings may require enabling Actions and allowing GitHub Actions
+  to create pull requests.
+
+A local equivalent is `bash scripts/sync_upstream.sh` from a clean checkout
+with writable GitHub origin and GitHub CLI authentication.
+
+## Validation (required before merging an upstream upgrade)
+
+```bash
 uv sync --frozen
-uv run ruff format src tests
 uv run ruff check src tests
 uv run ruff format --check src tests
-uv run pytest tests -q
-uv run shikhu --help
-git diff --check
+uv run pytest -q
+uv build --wheel
 ```
 
-Review `git diff` before committing. The upstream repo explicitly says it is not accepting PRs, and the connected GitHub account currently has no upstream push permission. To publish, make a writable fork, add it as your remote, commit and push the branch there; do not force-push to upstream.
+Smoke-test `shikhu init --no-skill`, `shikhu refresh`, `shikhu quiz`, and
+`shikhu map --dry-run` on a disposable nonsecret repository for each enabled
+provider. Mocked tests cannot prove live API compatibility.
 
-## Run locally
+## Rollback
 
-```bash
-ollama pull qwen3:14b
-export SHIKHU_PROVIDER=ollama_local
-export SHIKHU_MODEL=qwen3:14b
-# Optional for a trusted remote GPU host:
-# export SHIKHU_OLLAMA_URL=http://100.x.y.z:11434
-uv run shikhu init --no-skill
-uv run shikhu summarize
-uv run shikhu refresh
-uv run shikhu quiz
-uv run shikhu map --dry-run
-```
-
-`init` creates a private local database and modifies only the target repo's `.gitignore` and `.quizignore` plus optional skills/hooks. Perform a real provider smoke test in a disposable Git repository containing small, nonsecret code first. For Bedrock, install the optional `boto3` SDK via `uv run --with boto3 shikhu ...`, configure an AWS profile/role with `bedrock:InvokeModel` and a permitted model ID, and verify regional availability. Bedrock/Ollama Cloud can incur charges; use `map --dry-run` before `map --yes`.
-
-## Verification status
-
-- Offline provider API-mock tests: 15 passed.
-- Python compile check: passed.
-- Real provider requests: not executed (no credentials/models available).
-- Full upstream regression suite and Ruff CI: not executed (full upstream checkout unavailable in this runtime).
-- Upstream push: not performed (read-only connected GitHub permissions).
-
-**Limitations:** Ollama Cloud has no native structured-output support; this adapter prompts for JSON and validates locally. Non-Jev judgments are heuristics and do not have Jev's calibration. See `docs/security-audit.md` for risks and verification gaps.
+Record the last tested SHA and reinstall it with
+`uv tool install --force "git+https://github.com/mileadev/shikhu.git@<sha>"`.
+Never delete the user's `coverage.db` or replace the fork's `main` with
+upstream commits by force.

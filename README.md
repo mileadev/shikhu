@@ -2,7 +2,7 @@
 
 # Shikhu
 
-**Learn the code your agents write.** Shikhu is a Python CLI for code-aware quizzes, conceptual inquiry, change review and knowledge coverage. Quiz results stay in a local SQLite database.
+**Learn the code your agents write.** Fork synchronized with upstream **v0.6.1**. Shikhu is a Python CLI for code-aware quizzes, conceptual inquiry, change review and knowledge coverage. Quiz results stay in a local SQLite database.
 
 ## Install
 
@@ -23,7 +23,7 @@ For an editable development installation: `uv sync --frozen && uv run shikhu --h
 
 ## Model providers
 
-The original OpenRouter backend remains the default. Set `SHIKHU_PROVIDER` and `SHIKHU_MODEL` to switch all generation paths; non-OpenRouter providers use **uncalibrated heuristic** judgments instead of the specialized Jev scoring API.
+The original OpenRouter backend remains the default (including the upstream v0.6.1 default-model change). Set `SHIKHU_PROVIDER` and `SHIKHU_MODEL` to switch all generation paths; non-OpenRouter providers use **uncalibrated heuristic** judgments instead of the specialized Jev scoring API.
 
 | Provider | Required configuration | Inference |
 | --- | --- | --- |
@@ -75,3 +75,8 @@ To route judgments through a different model on the same non-OpenRouter provider
 Full CLI reference and learning workflow: [`docs/guide.md`](docs/guide.md). Audit and local deployment notes: [`docs/security-audit.md`](docs/security-audit.md).
 
 MIT-licensed. Original project by [Arjun Patel](https://github.com/arjunpatel7). The upstream repository currently states it is not accepting pull requests.
+## Staying compatible with upstream
+
+This fork merges upstream Git history rather than copying releases into unrelated branches. The scheduled [upstream-sync workflow](.github/workflows/upstream-sync.yml) checks `arjunpatel7/shikhu:main` weekly and can be dispatched manually. It creates a **review PR**, never auto-merges into `main`, and stops on merge conflicts. CI must pass and provider compatibility must be reviewed before merging. Run the same sync locally with `bash scripts/sync_upstream.sh` (requires `git` and `gh`).
+
+See [deployment and upgrade notes](docs/deployment.md) for installation, rollback, and validation.
